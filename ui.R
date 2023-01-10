@@ -23,13 +23,13 @@ shinyUI(fluidPage(
     sidebarPanel(
        numericInput("x1",
                     "Arm 1: Number of Events",
-                    value = 8),
+                    value = 4),
        numericInput("n1",
                     "Arm 1: Number of Patients",
                     value = 40),
        numericInput("x2",
                     "Arm 2: Number of Events",
-                    value = 4),
+                    value = 8),
        numericInput("n2",
                     "Arm 2: Number of Patients",
                     value = 40)

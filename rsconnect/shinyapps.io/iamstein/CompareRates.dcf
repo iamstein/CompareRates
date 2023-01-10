@@ -1,0 +1,13 @@
+name: CompareRates
+title: CompareRates
+username:
+account: iamstein
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8004380
+bundleId: 6717935
+url: https://iamstein.shinyapps.io/CompareRates/
+when: 1673364110.09533
+lastSyncTime: 1673364110.09536
+asMultiple: FALSE
+asStatic: FALSE
