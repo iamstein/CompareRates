@@ -1,0 +1,9 @@
+Title: Comparing Rates
+Author: Andy Stein
+AuthorUrl: https://github.com/iamstein/CompareRates
+Depends: 
+License: MIT
+DisplayMode:
+Tags: Graphics, Exploratory Analysis
+Type: Shiny
+Description: Show confidence intervals when comparing rates of response in a clinical.
