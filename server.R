@@ -36,7 +36,7 @@ shinyServer(function(input, output) {
   
   output$histogramPlot <- renderPlot({
     n_events = input$x1 + input$x2
-    data = data.frame(x = 1:n_events) %>%
+    data = data.frame(x = 0:n_events) %>%
       mutate(y1 = choose(n_events,x),
              y1 = y1/sum(y1))
   
