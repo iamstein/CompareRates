@@ -5,9 +5,9 @@ account: iamstein
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8004380
-bundleId: 6717935
+bundleId: 6718136
 url: https://iamstein.shinyapps.io/CompareRates/
-when: 1673364110.09533
-lastSyncTime: 1673364110.09536
+when: 1673365742.68024
+lastSyncTime: 1673365742.68026
 asMultiple: FALSE
 asStatic: FALSE

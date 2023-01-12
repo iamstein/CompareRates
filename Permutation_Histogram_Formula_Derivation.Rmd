@@ -1,0 +1,125 @@
+---
+title: "Deriving Formulas for Shiny App"
+author: "Andy Stein"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(knitr)
+library(ggplot2)
+library(scales)
+
+opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE, fig.height = 4, fig.width = 6)
+```
+
+# Introduction
+
+Consider a clinical study with two arms of size $n_1$ and $n_2$ with $X_1$ and $X_2$ events occurring in each arm.  We have created an app to help people get an intuitive sense for how similar the event rates ($x_1/n_1$, $x_2/n_2$) are between the two arms.  Often, it happens that there are numerical difference, but that these numerical differences could have easily occurred by chance we seek to help colleagues to understand this.
+
+One graph we'll create is a probability distribution of the outcomes of a permutation test of the existing data.  Between the two arms there are $x_{tot} = x_1 + x_2$ responses.  If the responders are randomly distributed between the two arms, what is the probability that $x_1$ takes on each possible value it could take.  In writing the code to generate this histogram, I found the formula a bit more complicated than initialy expected, and so I wanted to write down the derivation here, with some examples.
+
+# Calculations
+
+We take the following definitions, below.  We highlight that in the permutation test framework, the total number of events $x_{tot}$ is conserved, but the events could be split differently between the arms.  In that case, the minimum number of events that occurs in an arm could be as low as 0, but only if there are fewer events than in the other arm.  If there are more events, then the minimum number is the number of events that remains after all patients in the other arm had an effect.  Similarly, the maximum number of events in an arm is either the number of patients in that arm, or the total number of events, whichever is smaller. 
+
+Here the prime ($'$) denotes the possible value in the permutation test, wehreas the absence of prime means it was the actual number of patients or events observed in the study.
+
+$$
+\begin{align*}
+n_{tot} & = n_1 + n_2 = \text{total number of patients recruited} \\
+x_{tot} & = x_1 + x_2 = \text{total number of events} \\
+n_\min  & = \min(n_1, n_2) = \text{number of patients in smaller arm} \\
+n_\max  & = \max(n_1, n_2) = \text{number of patients in larger arm} \\
+x'_{1,lb} & = \max(0, x_{tot}-n_2) = \text{min. number of events that could have occured in arm 1, assuming } x_{tot} \text{ events} \\
+x'_{1,ub} & = \min(n_1, x_{tot}) = \text{max. number of events that could have occured in arm 1, assuming } x_{tot} \text{ events} \\
+x'_{2,lb} & = \max(0, x_{tot}-n_1) = \text{min. number of events that could have occured in arm 2, assuming } x_{tot} \text{ events} \\
+x'_{2,ub} & = \min(n_2, x_{tot}) = \text{max. number of events that could have occured in arm 2, assuming } x_{tot} \text{ events} \\
+\end{align*}
+$$
+To calculate the probability of each possible value for $x'_1$ between $x'_{1,lb}$ and $x'_{1,ub}$, we count the number of ways ($M(x'_1, x'_2)$) the patients could be arranged, noting that a particular choice of $(x'_1, x'_2)$ is constrained because $x'_2 = x_{tot} - x'_1$, and $x_{tot}$.
+
+$$
+\begin{align*}
+M(x'_1, x'_2) = \left( \begin{array}{c} n_1 \\ x'_1 \end{array} \right) \left( \begin{array}{c} n_2 \\ x'_2 \end{array} \right)
+\end{align*}
+$$
+
+The total number of arrangements is just the sum of all $M$ where $x'_1$ ranges from its lower to upper bound.
+
+$$
+M_{tot} = \sum_{x'_1 = x'_{1,lb}}^{x'_{1,ub}} M(x'_1, x'_2)
+$$
+
+And the probability of any particular arrangement is just $M(x'_1, x'_2)/M_{tot}$.
+
+# Code
+```{r}
+p = data.frame(x1 = 4, x2 = 5, n1 = 40, n2 = 40) %>%
+  mutate(ntot = n1 + n2,
+         xtot = x1 + x2,
+         nmin = min(n1, n2),
+         nmax = max(n1, n2),
+         x1lb = max(0, xtot-n2),
+         x2lb = max(0, xtot-n1),
+         x1ub = min(n1, xtot),
+         x2ub = min(n2, xtot))
+
+prob = data.frame(x1i = p$x1lb:p$x1ub) %>%
+  mutate(x2i = p$xtot - x1i,
+         n1 = p$n1,
+         n2 = p$n2,
+         Mi = choose(n1, x1i) * choose(n2, x2i),
+         Mtot = sum(Mi),
+         prob = Mi/Mtot, 
+         ratio1_obs = p$x1/n1,
+         ratio2_obs = p$x2/n2,
+         ratio1i = x1i/n1,
+         ratio2i = x2i/n2, 
+         extreme_flag = ifelse(abs(ratio1i - ratio2i) > abs(ratio1_obs - ratio2_obs), 1, 0) )
+
+pct_extreme = prob %>%
+  filter(extreme_flag == 1) %>%
+  summarise(prob = sum(prob)*100) %>%
+  as.numeric() %>%
+  signif(2)
+      
+integer_breaks <- function(n = 5, ...) {
+  fxn <- function(x) {
+    breaks <- floor(pretty(x, n, ...))
+    names(breaks) <- attr(breaks, "labels")
+    breaks
+  }
+  return(fxn)
+}
+        
+g = ggplot(prob, aes(x = x1i, y = prob))
+g = g + geom_bar(stat = "identity")
+g = g + scale_x_continuous(breaks = pretty_breaks())
+g = g + scale_y_continuous(labels = scales::percent)
+g = g + theme_bw()
+g = g + labs(x = "Number of Events in Arm 1", 
+             y = "Percentage of Permutations")
+
+prob_noextreme = prob %>%
+  filter(extreme_flag == 0)
+
+x1 = prob$x1i[1]
+x2 = prob_noextreme$x1i[1] - 1 
+x3 = prob_noextreme$x1i[nrow(prob_noextreme)] + 1 
+x4 = prob$x1i[nrow(prob)]
+y  = max(prob$prob)
+
+g = g + annotate("rect", xmin = x1 - 0.5, xmax = x2 + 0.5,  ymin = 0, ymax = y, alpha = 0.2, fill="red")
+g = g + annotate("rect", xmin = x3 - 0.5, xmax = x4 + 0.5,  ymin = 0, ymax = y, alpha = 0.2, fill="red")
+g = g + ggtitle(paste0("When permuting response (randomly assigning to either arm):\n",
+                        pct_extreme, "% of the time, equal or greater imbalance occurs (shaded area)"))
+ 
+print(g)
+
+```
