@@ -83,19 +83,23 @@ shinyServer(function(input, output) {
       
       #calculate the extremes of the histogram
       prob_noextreme = prob[extreme_flag == 0]
+      g = g + theme(text = element_text(size=16))
       
-      if (any(extreme_flag == 1)) {
+      y  = max(prob)
+      if (any(extreme_flag == 0)) {
         xa = x1i[1]
         xb = x1i[extreme_flag == 0][1] - 1 
         xc = x1i[extreme_flag == 0][sum(extreme_flag == 0)] + 1 
         xd = x1i[length(x1i)]
 
-        y  = max(prob)
         g = g + annotate("rect", xmin = xa - 0.5, xmax = xb + 0.5,  ymin = 0, ymax = y, alpha = 0.2, fill="red")
         g = g + annotate("rect", xmin = xc - 0.5, xmax = xd + 0.5,  ymin = 0, ymax = y, alpha = 0.2, fill="red")
-        g = g + ggtitle(paste0("When permuting response (randomly assigning to either arm):\n",
-                               pct_extreme, "% of the time, equal or greater imbalance occurs (shaded area)"))
+      } else {
+        g = g + annotate("rect", xmin = x1lb - 0.5, xmax = x1ub + 0.5,  ymin = 0, ymax = y, alpha = 0.2, fill="red")
       }
+      g = g + ggtitle(paste0("When permuting response (randomly assigning to either arm):\n",
+                             pct_extreme, "% of the time, equal or greater imbalance occurs (shaded area)"))
+      
       print(g)
   })
 })

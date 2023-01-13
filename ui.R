@@ -18,8 +18,8 @@ shinyUI(fluidPage(
      This App provides two ways to visualize this comparison.
      1) Event rate with 95% confidence intervals that are calculated using the",
      a(href='https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Clopper%E2%80%93Pearson_interval','Pearson-Klopper Exact method.'),
-     "2) Randomly permute the responses between the two different arms and calculate the percentage of time an outcome as extreme or more is obsesrved.",
-     "This page was created by", a(href='https://sites.google.com/site/andrewsteinphd/home', 'Andy Stein')),
+     "2) Randomly permute the responses between the two different arms and calculate the percentage of time an outcome as extreme or more is obsesrved.
+     This page was created by", a(href='https://sites.google.com/site/andrewsteinphd/home', 'Andy Stein')),
   
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
